@@ -1,0 +1,12 @@
+apiVersion: keington.github.com/v1
+kind: RedisSentinel
+metadata:
+  labels:
+    app.kubernetes.io/name: redissentinel
+    app.kubernetes.io/instance: redissentinel-sample
+    app.kubernetes.io/part-of: redis-sentinel
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: redis-sentinel
+  name: redissentinel-sample
+spec:
+  # TODO(user): Add fields here
