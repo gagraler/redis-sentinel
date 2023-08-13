@@ -8,3 +8,6 @@ spec:
     spec:
       containers:
       - name: manager
+  selector:
+    matchLabels:
+      control-plane: controller-manager

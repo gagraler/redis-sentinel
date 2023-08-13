@@ -12,7 +12,7 @@ metadata:
   name: redissentinel-viewer-role
 rules:
 - apiGroups:
-  - keington.github.com
+  - keington.dbsecurity.io
   resources:
   - redissentinels
   verbs:
@@ -20,7 +20,7 @@ rules:
   - list
   - watch
 - apiGroups:
-  - keington.github.com
+  - keington.dbsecurity.io
   resources:
   - redissentinels/status
   verbs:

@@ -5,7 +5,7 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - keington.github.com
+  - keington.dbsecurity.io
   resources:
   - redissentinels
   verbs:
@@ -17,13 +17,13 @@ rules:
   - update
   - watch
 - apiGroups:
-  - keington.github.com
+  - keington.dbsecurity.io
   resources:
   - redissentinels/finalizers
   verbs:
   - update
 - apiGroups:
-  - keington.github.com
+  - keington.dbsecurity.io
   resources:
   - redissentinels/status
   verbs:

@@ -1,4 +1,4 @@
-apiVersion: keington.github.com/v1
+apiVersion: keington.dbsecurity.io/v1
 kind: RedisSentinel
 metadata:
   labels:
