@@ -12,7 +12,7 @@ metadata:
   name: redissentinel-editor-role
 rules:
 - apiGroups:
-  - keington.github.com
+  - keington.dbsecurity.io
   resources:
   - redissentinels
   verbs:
@@ -24,7 +24,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - keington.github.com
+  - keington.dbsecurity.io
   resources:
   - redissentinels/status
   verbs:

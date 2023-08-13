@@ -1,5 +1,5 @@
 # redis-sentinel
-基于Kubernetes Operator模式实现Redis Sentinel
+基于Kubernetes Operator实现Redis Sentinel集群部署
 
 ## 描述
 // TODO: 关于项目和使用概述的深入段落

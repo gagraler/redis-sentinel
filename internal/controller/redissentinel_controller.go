@@ -18,24 +18,28 @@ package controller
 
 import (
 	"context"
+	"github.com/go-logr/logr"
+	"k8s.io/apimachinery/pkg/api/errors"
+	"redis-sentinel/internal/utils"
+	"time"
 
 	"k8s.io/apimachinery/pkg/runtime"
+	keingtonv1 "redis-sentinel/api/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-
-	keingtonv1 "redis-sentinel/api/v1"
 )
 
-// RedisSentinelReconciler reconciles a RedisSentinel object
-type RedisSentinelReconciler struct {
+// RedisSentinelReconciles reconciles a RedisSentinel object
+type RedisSentinelReconciles struct {
 	client.Client
+	Log    logr.Logger
 	Scheme *runtime.Scheme
 }
 
-//+kubebuilder:rbac:groups=keington.github.com,resources=redissentinels,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=keington.github.com,resources=redissentinels/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=keington.github.com,resources=redissentinels/finalizers,verbs=update
+//+kubebuilder:rbac:groups=keington.dbsecurity.io,resources=redissentinels,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=keington.dbsecurity.io,resources=redissentinels/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=keington.dbsecurity.io,resources=redissentinels/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -46,16 +50,39 @@ type RedisSentinelReconciler struct {
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.15.0/pkg/reconcile
-func (r *RedisSentinelReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *RedisSentinelReconciles) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
 
-	// TODO(user): your logic here
+	// 自定义逻辑
+	reqLogger := r.Log.WithValues("RedisSentinel", req.NamespacedName)
+	reqLogger.Info("Reconciling RedisSentinel")
+	instance := &keingtonv1.RedisSentinel{}
+
+	// get redis sentinel replicas
+	if err := r.Client.Get(context.TODO(), req.NamespacedName, instance); err != nil {
+		if errors.IsNotFound(err) {
+			return ctrl.Result{}, nil
+		}
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	if err := utils.HandleRedisSentinelFinalizer(instance, r.Client); err != nil {
+		return ctrl.Result{
+			RequeueAfter: time.Second * 60,
+		}, err
+	}
+
+	if err := utils.AddRedisSentinelFinalizer(instance, r.Client); err != nil {
+		return ctrl.Result{
+			RequeueAfter: time.Second * 60,
+		}, err
+	}
 
 	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *RedisSentinelReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *RedisSentinelReconciles) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&keingtonv1.RedisSentinel{}).
 		Complete(r)

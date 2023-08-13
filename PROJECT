@@ -2,7 +2,7 @@
 # This file is used to track the info used to scaffold your project
 # and allow the plugins properly work.
 # More info: https://book.kubebuilder.io/reference/project-config.html
-domain: github.com
+domain: dbsecurity.io
 layout:
 - go.kubebuilder.io/v4
 projectName: redis-sentinel
@@ -12,7 +12,7 @@ resources:
     crdVersion: v1
     namespaced: true
   controller: true
-  domain: github.com
+  domain: dbsecurity.io
   group: keington
   kind: RedisSentinel
   path: redis-sentinel/api/v1

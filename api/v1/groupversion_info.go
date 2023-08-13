@@ -16,7 +16,7 @@ limitations under the License.
 
 // Package v1 contains API Schema definitions for the keington v1 API group
 // +kubebuilder:object:generate=true
-// +groupName=keington.github.com
+// +groupName=keington.dbsecurity.io
 package v1
 
 import (
@@ -26,7 +26,7 @@ import (
 
 var (
 	// GroupVersion is group version used to register these objects
-	GroupVersion = schema.GroupVersion{Group: "keington.github.com", Version: "v1"}
+	GroupVersion = schema.GroupVersion{Group: "keington.dbsecurity.io", Version: "v1"}
 
 	// SchemeBuilder is used to add go types to the GroupVersionKind scheme
 	SchemeBuilder = &scheme.Builder{GroupVersion: GroupVersion}
