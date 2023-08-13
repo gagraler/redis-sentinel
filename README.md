@@ -1,5 +1,5 @@
 # redis-sentinel
-// TODO(user): Add simple overview of use/purpose
+Redis Sentinel cluster deployment based on Kubernetes Operator
 
 ## Description
 // TODO(user): An in-depth paragraph about your project and overview of use
