@@ -17,6 +17,7 @@ limitations under the License.
 package v1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -28,8 +29,49 @@ type RedisSentinelSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of RedisSentinel. Edit redissentinel_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:default=3
+	Size                *int32                     `json:"size"`
+	KubernetesConfig    KubernetesConfig           `json:"kubernetesConfig"`
+	RedisSentinelConfig *RedisSentinelConfig       `json:"redisSentinelConfig,omitempty"`
+	NodeSelector        map[string]string          `json:"nodeSelector,omitempty"`
+	PodSecurityContext  *corev1.PodSecurityContext `json:"podSecurityContext,omitempty"`
+	SecurityContext     *corev1.SecurityContext    `json:"securityContext,omitempty"`
+	PriorityClassName   string                     `json:"priorityClassName,omitempty"`
+	Affinity            *corev1.Affinity           `json:"affinity,omitempty"`
+	Tolerations         *[]corev1.Toleration       `json:"tolerations,omitempty"`
+	TLS                 *TLSConfig                 `json:"TLS,omitempty"`
+	PodDisruptionBudget *RedisPodDisruptionBudget  `json:"pdb,omitempty"`
+	// +kubebuilder:default:={initialDelaySeconds: 1, timeoutSeconds: 1, periodSeconds: 10, successThreshold: 1, failureThreshold:3}
+	ReadinessProbe *Probe `json:"readinessProbe,omitempty" protobuf:"bytes,11,opt,name=readinessProbe"`
+	// +kubebuilder:default:={initialDelaySeconds: 1, timeoutSeconds: 1, periodSeconds: 10, successThreshold: 1, failureThreshold:3}
+	LivenessProbe                 *Probe         `json:"livenessProbe,omitempty" protobuf:"bytes,11,opt,name=livenessProbe"`
+	InitContainer                 *InitContainer `json:"initContainer,omitempty"`
+	Sidecars                      *[]Sidecar     `json:"sidecars,omitempty"`
+	ServiceAccountName            *string        `json:"serviceAccountName,omitempty"`
+	TerminationGracePeriodSeconds *int64         `json:"terminationGracePeriodSeconds,omitempty" protobuf:"varint,4,opt,name=terminationGracePeriodSeconds"`
+}
+
+type RedisSentinelConfig struct {
+	AdditionalSentinelConfig *string `json:"additionalSentinelConfig,omitempty"`
+	RedisReplicationName     string  `json:"redisReplicationName"`
+	// +kubebuilder:default:=myMaster
+	MasterGroupName string `json:"masterGroupName,omitempty"`
+	// +kubebuilder:default:="6379"
+	RedisPort string `json:"redisPort,omitempty"`
+	// +kubebuilder:default:="2"
+	Quorum string `json:"quorum,omitempty"`
+	// +kubebuilder:default:="1"
+	ParallelSyncs string `json:"parallelSyncs,omitempty"`
+	// +kubebuilder:default:="180000"
+	FailoverTimeout string `json:"failoverTimeout,omitempty"`
+	// +kubebuilder:default:="30000"
+	DownAfterMilliseconds string `json:"downAfterMilliseconds,omitempty"`
+}
+
+func (cr *RedisSentinelSpec) GetSentinelCounts(t string) int32 {
+	replica := cr.Size
+	return *replica
 }
 
 // RedisSentinelStatus defines the observed state of RedisSentinel
@@ -38,10 +80,17 @@ type RedisSentinelStatus struct {
 	// Important: Run "make" to regenerate code after modifying this file
 }
 
+// RedisPodDisruptionBudget configure a PodDisruptionBudget on the resource (leader/follower)
+type RedisPodDisruptionBudget struct {
+	Enabled        bool   `json:"enabled,omitempty"`
+	MinAvailable   *int32 `json:"minAvailable,omitempty"`
+	MaxUnavailable *int32 `json:"maxUnavailable,omitempty"`
+}
+
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// RedisSentinel is the Schema for the redissentinels API
+// RedisSentinel is the Schema for the redis sentinels API
 type RedisSentinel struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
