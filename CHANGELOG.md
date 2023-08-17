@@ -28,6 +28,6 @@
 ### Removed
 
 ## Version address
-1.0.1: https://github.com/keington/tag/v1.0.1-beta
+1.0.1: https://github.com/keington/redis-sentinel/tree/v1.0.1-beta
 
 ### Initial Release
