@@ -32,9 +32,9 @@ import (
 // GetRedisNodesByRole Get Redis nodes by it's role i.e. master, slave and sentinel
 func GetRedisNodesByRole(cr *v1.RedisReplication, redisRole string) []string {
 	logger := generateRedisManagerLogger(cr.Namespace, cr.ObjectMeta.Name)
-	stateFulset, err := GetStatefulSet(cr.Namespace, cr.Name)
+	stateFulSet, err := GetStatefulSet(cr.Namespace, cr.Name)
 	if err != nil {
-		logger.Error(err, "Failed to Get the Statefulset of the", "custom resource", cr.Name, "in namespace", cr.Namespace)
+		logger.Error(err, "Failed to Get the stateFulSet of the", "custom resource", cr.Name, "in namespace", cr.Namespace)
 	}
 
 	var pods []string
@@ -42,7 +42,7 @@ func GetRedisNodesByRole(cr *v1.RedisReplication, redisRole string) []string {
 
 	for i := 0; i < int(replicas); i++ {
 
-		podName := stateFulset.Name + "-" + strconv.Itoa(i)
+		podName := stateFulSet.Name + "-" + strconv.Itoa(i)
 		podRole := checkRedisServerRole(cr, podName)
 		if podRole == redisRole {
 			pods = append(pods, podName)
@@ -58,9 +58,13 @@ func checkAttachedSlave(cr *v1.RedisReplication, masterPods []string) string {
 
 	for _, podName := range masterPods {
 
-		connected_slaves := ""
+		connectedSlaves := ""
 		redisClient := configureRedisReplicationClient(cr, podName)
-		defer redisClient.Close()
+		defer func(redisClient *redis.Client) {
+			err := redisClient.Close()
+			if err != nil {
+			}
+		}(redisClient)
 		info, err := redisClient.Info("replication").Result()
 		if err != nil {
 			logger.Error(err, "Failed to Get the connected slaves Info of the", "redis pod", podName)
@@ -70,12 +74,12 @@ func checkAttachedSlave(cr *v1.RedisReplication, masterPods []string) string {
 
 		for _, line := range lines {
 			if strings.HasPrefix(line, "connected_slaves:") {
-				connected_slaves = strings.TrimPrefix(line, "connected_slaves:")
+				connectedSlaves = strings.TrimPrefix(line, "connected_slaves:")
 				break
 			}
 		}
 
-		nums, _ := strconv.Atoi(connected_slaves)
+		nums, _ := strconv.Atoi(connectedSlaves)
 		if nums > 0 {
 			return podName
 		}
@@ -116,7 +120,11 @@ func checkRedisServerRole(cr *v1.RedisReplication, podName string) string {
 	logger := generateRedisManagerLogger(cr.Namespace, cr.ObjectMeta.Name)
 
 	redisClient := configureRedisReplicationClient(cr, podName)
-	defer redisClient.Close()
+	defer func(redisClient *redis.Client) {
+		err := redisClient.Close()
+		if err != nil {
+		}
+	}(redisClient)
 	info, err := redisClient.Info("replication").Result()
 	if err != nil {
 		logger.Error(err, "Failed to Get the role Info of the", "redis pod", podName)

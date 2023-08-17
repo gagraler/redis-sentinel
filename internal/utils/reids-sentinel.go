@@ -29,7 +29,7 @@ import (
 	v1 "redis-sentinel/api/v1"
 )
 
-// RedisSentinelSTS is a interface to call Redis StatefulSet function
+// RedisSentinelSTS is e.g. interface to call Redis StatefulSet function
 type RedisSentinelSTS struct {
 	RedisStateFulType             string
 	ExternalConfig                *string
@@ -77,7 +77,7 @@ func (service RedisSentinelSTS) CreateRedisSentinelSetup(cr *v1.RedisSentinel) e
 	stateFulName := cr.ObjectMeta.Name + "-" + service.RedisStateFulType
 	logger := stateFulSetLogger(cr.Namespace, stateFulName)
 	labels := getRedisLabels(stateFulName, "cluster", service.RedisStateFulType, cr.ObjectMeta.Labels)
-	annotations := generateStatefulSetsAnots(cr.ObjectMeta)
+	annotations := generateStatefulSetsAnts(cr.ObjectMeta)
 	objectMetaInfo := generateObjectMetaInformation(stateFulName, cr.Namespace, labels, annotations)
 	err := CreateOrUpdateStateFul(
 		cr.Namespace,
@@ -90,7 +90,7 @@ func (service RedisSentinelSTS) CreateRedisSentinelSetup(cr *v1.RedisSentinel) e
 	)
 
 	if err != nil {
-		logger.Error(err, "Cannot create Sentinel statefulset for Redis")
+		logger.Error(err, "Cannot create Sentinel stateFulSet for Redis")
 		return err
 	}
 	return nil
@@ -110,11 +110,11 @@ func generateRedisSentinelParams(cr *v1.RedisSentinel, replicas int32, externalC
 		TerminationGracePeriodSeconds: cr.Spec.TerminationGracePeriodSeconds,
 		Tolerations:                   cr.Spec.Toleration,
 		ServiceAccountName:            cr.Spec.ServiceAccountName,
-		UpdateStrategy:                cr.Spec.KubernetesConfig.UpdateStrategy,
+		UpdateStrategy:                cr.Spec.RedisConfig.UpdateStrategy,
 	}
 
-	if cr.Spec.KubernetesConfig.ImagePullSecrets != nil {
-		res.ImagePullSecrets = cr.Spec.KubernetesConfig.ImagePullSecrets
+	if cr.Spec.RedisConfig.ImagePullSecrets != nil {
+		res.ImagePullSecrets = cr.Spec.RedisConfig.ImagePullSecrets
 	}
 	if externalConfig != nil {
 		res.ExternalConfig = externalConfig
@@ -146,23 +146,23 @@ func generateRedisSentinelInitContainerParams(cr *v1.RedisSentinel) initContaine
 	return initContainerProp
 }
 
-// Create Redis Sentinel Statefulset Container Params
+// Create Redis Sentinel stateFulSet Container Params
 func generateRedisSentinelContainerParams(cr *v1.RedisSentinel, readinessProbeDef *v1.Probe, livenessProbeDef *v1.Probe) containerParameters {
 
 	trueProperty := true
 	falseProperty := false
 	containerProp := containerParameters{
 		Role:                  "sentinel",
-		Image:                 cr.Spec.KubernetesConfig.Image,
-		ImagePullPolicy:       cr.Spec.KubernetesConfig.ImagePullPolicy,
-		Resources:             cr.Spec.KubernetesConfig.Resources,
+		Image:                 cr.Spec.RedisConfig.Image,
+		ImagePullPolicy:       cr.Spec.RedisConfig.ImagePullPolicy,
+		Resources:             cr.Spec.RedisConfig.Resources,
 		SecurityContext:       cr.Spec.SecurityContext,
 		AdditionalEnvVariable: getSentinelEnvVariable(cr),
 	}
-	if cr.Spec.KubernetesConfig.ExistingPasswordSecret != nil {
+	if cr.Spec.RedisConfig.ExistingPasswordSecret != nil {
 		containerProp.EnabledPassword = &trueProperty
-		containerProp.SecretName = cr.Spec.KubernetesConfig.ExistingPasswordSecret.Name
-		containerProp.SecretKey = cr.Spec.KubernetesConfig.ExistingPasswordSecret.Key
+		containerProp.SecretName = cr.Spec.RedisConfig.ExistingPasswordSecret.Name
+		containerProp.SecretKey = cr.Spec.RedisConfig.ExistingPasswordSecret.Key
 	} else {
 		containerProp.EnabledPassword = &falseProperty
 	}
@@ -190,16 +190,16 @@ func (service RedisSentinelService) CreateRedisSentinelService(cr *v1.RedisSenti
 	serviceName := cr.ObjectMeta.Name + "-" + service.RedisService
 	logger := serviceLogger(cr.Namespace, serviceName)
 	labels := getRedisLabels(serviceName, "cluster", service.RedisService, cr.ObjectMeta.Labels)
-	annotations := generateServiceAnots(cr.ObjectMeta, nil)
+	annotations := generateServiceAnts(cr.ObjectMeta, nil)
 
 	additionalServiceAnnotations := map[string]string{}
-	if cr.Spec.KubernetesConfig.Service != nil {
-		additionalServiceAnnotations = cr.Spec.KubernetesConfig.Service.ServiceAnnotations
+	if cr.Spec.RedisConfig.Service != nil {
+		additionalServiceAnnotations = cr.Spec.RedisConfig.Service.ServiceAnnotations
 	}
 
 	objectMetaInfo := generateObjectMetaInformation(serviceName, cr.Namespace, labels, annotations)
 	headlessObjectMetaInfo := generateObjectMetaInformation(serviceName+"-headless", cr.Namespace, labels, annotations)
-	additionalObjectMetaInfo := generateObjectMetaInformation(serviceName+"-additional", cr.Namespace, labels, generateServiceAnots(cr.ObjectMeta, additionalServiceAnnotations))
+	additionalObjectMetaInfo := generateObjectMetaInformation(serviceName+"-additional", cr.Namespace, labels, generateServiceAnts(cr.ObjectMeta, additionalServiceAnnotations))
 
 	err := CreateOrUpdateService(cr.Namespace, headlessObjectMetaInfo, redisSentinelAsOwner(cr), false, "ClusterIP")
 	if err != nil {
@@ -213,8 +213,8 @@ func (service RedisSentinelService) CreateRedisSentinelService(cr *v1.RedisSenti
 	}
 
 	additionalServiceType := "ClusterIP"
-	if cr.Spec.KubernetesConfig.Service != nil {
-		additionalServiceType = cr.Spec.KubernetesConfig.Service.ServiceType
+	if cr.Spec.RedisConfig.Service != nil {
+		additionalServiceType = cr.Spec.RedisConfig.Service.ServiceType
 	}
 	err = CreateOrUpdateService(cr.Namespace, additionalObjectMetaInfo, redisSentinelAsOwner(cr), false, additionalServiceType)
 	if err != nil {
@@ -268,14 +268,14 @@ func getRedisReplicationMasterIP(cr *v1.RedisSentinel) string {
 	replicationName := cr.Spec.RedisSentinelConfig.RedisSentinelName
 	replicationNamespace := cr.Namespace
 
-	var replicationInstance v1.RedisSentinel
+	var replicationInstance v1.RedisReplication
 	var realMasterPod string
 
 	// Get Request on Dynamic Client
 	customObject, err := createK8sDynamicClient().Resource(schema.GroupVersionResource{
-		Group:    "redis.redis.opstreelabs.in",
-		Version:  "v1beta1",
-		Resource: "redisreplications",
+		Group:    "redis.redis.opsTreeLabs.in",
+		Version:  "v1",
+		Resource: "redisReplications",
 	}).Namespace(replicationNamespace).Get(context.TODO(), replicationName, matev1.GetOptions{})
 
 	if err != nil {

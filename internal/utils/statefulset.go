@@ -236,7 +236,7 @@ func generateStatefulSetsDef(stsMeta metav1.ObjectMeta, params statefulSetParame
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels:      stsMeta.GetLabels(),
-					Annotations: generateStatefulSetsAnots(stsMeta),
+					Annotations: generateStatefulSetsAnts(stsMeta),
 				},
 				Spec: corev1.PodSpec{
 					Containers: generateContainerDef(
@@ -331,7 +331,7 @@ func createPVCTemplate(volumeName string, stsMeta metav1.ObjectMeta, storageSpec
 	pvcTemplate.Name = volumeName
 	pvcTemplate.Labels = stsMeta.GetLabels()
 	// We want the same annotations as the StatefulSet here
-	pvcTemplate.Annotations = generateStatefulSetsAnots(stsMeta)
+	pvcTemplate.Annotations = generateStatefulSetsAnts(stsMeta)
 	if storageSpec.Spec.AccessModes == nil {
 		pvcTemplate.Spec.AccessModes = []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce}
 	} else {
@@ -348,7 +348,7 @@ func createPVCTemplate(volumeName string, stsMeta metav1.ObjectMeta, storageSpec
 }
 
 // generateContainerDef generates container definition for Redis
-func generateContainerDef(name string, containerParams containerParameters, clusterMode, enableMetrics bool, externalConfig *string, mountpath []corev1.VolumeMount, sidecars []v1.Sidecar) []corev1.Container {
+func generateContainerDef(name string, containerParams containerParameters, clusterMode, enableMetrics bool, externalConfig *string, mountPath []corev1.VolumeMount, sidecars []v1.Sidecar) []corev1.Container {
 	containerDefinition := []corev1.Container{
 		{
 			Name:            name,
@@ -368,7 +368,7 @@ func generateContainerDef(name string, containerParams containerParameters, clus
 			),
 			ReadinessProbe: getProbeInfo(containerParams.ReadinessProbe),
 			LivenessProbe:  getProbeInfo(containerParams.LivenessProbe),
-			VolumeMounts:   getVolumeMount(name, containerParams.PersistenceEnabled, clusterMode, externalConfig, mountpath, containerParams.TLSConfig, containerParams.ACLConfig),
+			VolumeMounts:   getVolumeMount(name, containerParams.PersistenceEnabled, clusterMode, externalConfig, mountPath, containerParams.TLSConfig, containerParams.ACLConfig),
 		},
 	}
 
@@ -409,7 +409,7 @@ func generateContainerDef(name string, containerParams containerParameters, clus
 	return containerDefinition
 }
 
-func generateInitContainerDef(name string, initContainerParams initContainerParameters, mountpath []corev1.VolumeMount) []corev1.Container {
+func generateInitContainerDef(name string, initContainerParams initContainerParameters, mountPath []corev1.VolumeMount) []corev1.Container {
 	initContainerDefinition := []corev1.Container{
 		{
 			Name:            "init" + name,
@@ -417,7 +417,7 @@ func generateInitContainerDef(name string, initContainerParams initContainerPara
 			ImagePullPolicy: initContainerParams.ImagePullPolicy,
 			Command:         initContainerParams.Command,
 			Args:            initContainerParams.Arguments,
-			VolumeMounts:    getVolumeMount(name, initContainerParams.PersistenceEnabled, false, nil, mountpath, nil, nil),
+			VolumeMounts:    getVolumeMount(name, initContainerParams.PersistenceEnabled, false, nil, mountPath, nil, nil),
 		},
 	}
 
@@ -487,11 +487,9 @@ func enableRedisMonitoring(params containerParameters) corev1.Container {
 			params.TLSConfig,
 			params.ACLConfig,
 		),
-		VolumeMounts: getVolumeMount("", nil, false, nil, params.AdditionalMountPath, params.TLSConfig, params.ACLConfig), // We need/want the tls-certs but we DON'T need the PVC (if one is available)
+		VolumeMounts: getVolumeMount("", nil, false, nil, params.AdditionalMountPath, params.TLSConfig, params.ACLConfig), // We need/want the tls-certs, but we DON'T need the PVC (if one is available)
 		Ports: []corev1.ContainerPort{
 			{
-				//Name:          redisExporterPortName,
-				//ContainerPort: redisExporterPort,
 				Protocol: corev1.ProtocolTCP,
 			},
 		},
