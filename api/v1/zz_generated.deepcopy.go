@@ -390,8 +390,8 @@ func (in *RedisSentinelSpec) DeepCopyInto(out *RedisSentinelSpec) {
 		*out = new(corev1.Affinity)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.Tolerations != nil {
-		in, out := &in.Tolerations, &out.Tolerations
+	if in.Toleration != nil {
+		in, out := &in.Toleration, &out.Toleration
 		*out = new([]corev1.Toleration)
 		if **in != nil {
 			in, out := *in, *out
@@ -416,8 +416,8 @@ func (in *RedisSentinelSpec) DeepCopyInto(out *RedisSentinelSpec) {
 		*out = new(Probe)
 		**out = **in
 	}
-	if in.LivenessProbe != nil {
-		in, out := &in.LivenessProbe, &out.LivenessProbe
+	if in.LivelinessProbe != nil {
+		in, out := &in.LivelinessProbe, &out.LivelinessProbe
 		*out = new(Probe)
 		**out = **in
 	}

@@ -39,13 +39,13 @@ type RedisSentinelSpec struct {
 	SecurityContext     *corev1.SecurityContext    `json:"securityContext,omitempty"`
 	PriorityClassName   string                     `json:"priorityClassName,omitempty"`
 	Affinity            *corev1.Affinity           `json:"affinity,omitempty"`
-	Tolerations         *[]corev1.Toleration       `json:"tolerations,omitempty"`
+	Toleration          *[]corev1.Toleration       `json:"toleration,omitempty"`
 	TLS                 *TLSConfig                 `json:"TLS,omitempty"`
-	PodDisruptionBudget *RedisPodDisruptionBudget  `json:"pdb,omitempty"`
+	PodDisruptionBudget *RedisPodDisruptionBudget  `json:"podDisruptionBudget,omitempty"`
 	// +kubebuilder:default:={initialDelaySeconds: 1, timeoutSeconds: 1, periodSeconds: 10, successThreshold: 1, failureThreshold:3}
 	ReadinessProbe *Probe `json:"readinessProbe,omitempty" protobuf:"bytes,11,opt,name=readinessProbe"`
 	// +kubebuilder:default:={initialDelaySeconds: 1, timeoutSeconds: 1, periodSeconds: 10, successThreshold: 1, failureThreshold:3}
-	LivenessProbe                 *Probe         `json:"livenessProbe,omitempty" protobuf:"bytes,11,opt,name=livenessProbe"`
+	LivelinessProbe               *Probe         `json:"livelinessProbe,omitempty"`
 	InitContainer                 *InitContainer `json:"initContainer,omitempty"`
 	Sidecars                      *[]Sidecar     `json:"sidecars,omitempty"`
 	ServiceAccountName            *string        `json:"serviceAccountName,omitempty"`
@@ -55,7 +55,7 @@ type RedisSentinelSpec struct {
 type RedisSentinelConfig struct {
 	AdditionalSentinelConfig *string `json:"additionalSentinelConfig,omitempty"`
 	RedisReplicationName     string  `json:"redisReplicationName"`
-	// +kubebuilder:default:=myMaster
+	// +kubebuilder:default:=redisSentinelCluster
 	MasterGroupName string `json:"masterGroupName,omitempty"`
 	// +kubebuilder:default:="6379"
 	RedisPort string `json:"redisPort,omitempty"`
