@@ -17,6 +17,7 @@ limitations under the License.
 package v1
 
 import (
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -32,8 +33,8 @@ type RedisSentinelSpec struct {
 	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:default=3
 	Size                *int32                     `json:"size"`
-	KubernetesConfig    KubernetesConfig           `json:"kubernetesConfig"`
 	RedisSentinelConfig *RedisSentinelConfig       `json:"redisSentinelConfig,omitempty"`
+	RedisConfig         RedisConfig                `json:"redisConfig"`
 	NodeSelector        map[string]string          `json:"nodeSelector,omitempty"`
 	PodSecurityContext  *corev1.PodSecurityContext `json:"podSecurityContext,omitempty"`
 	SecurityContext     *corev1.SecurityContext    `json:"securityContext,omitempty"`
@@ -45,7 +46,7 @@ type RedisSentinelSpec struct {
 	// +kubebuilder:default:={initialDelaySeconds: 1, timeoutSeconds: 1, periodSeconds: 10, successThreshold: 1, failureThreshold:3}
 	ReadinessProbe *Probe `json:"readinessProbe,omitempty" protobuf:"bytes,11,opt,name=readinessProbe"`
 	// +kubebuilder:default:={initialDelaySeconds: 1, timeoutSeconds: 1, periodSeconds: 10, successThreshold: 1, failureThreshold:3}
-	LivelinessProbe               *Probe         `json:"livelinessProbe,omitempty"`
+	LivenessProbe                 *Probe         `json:"livenessProbe,omitempty" protobuf:"bytes,11,opt,name=livenessProbe"`
 	InitContainer                 *InitContainer `json:"initContainer,omitempty"`
 	Sidecars                      *[]Sidecar     `json:"sidecars,omitempty"`
 	ServiceAccountName            *string        `json:"serviceAccountName,omitempty"`
@@ -53,12 +54,20 @@ type RedisSentinelSpec struct {
 }
 
 type RedisSentinelConfig struct {
-	AdditionalSentinelConfig *string `json:"additionalSentinelConfig,omitempty"`
-	RedisReplicationName     string  `json:"redisReplicationName"`
+	AdditionalSentinelConfig *string                          `json:"additionalSentinelConfig,omitempty"`
+	Image                    string                           `json:"image"`
+	ImagePullPolicy          corev1.PullPolicy                `json:"imagePullPolicy,omitempty"`
+	Resources                *corev1.ResourceRequirements     `json:"resources,omitempty"`
+	ExistingPasswordSecret   *ExistingPasswordSecret          `json:"redisSecret,omitempty"`
+	ImagePullSecrets         *[]corev1.LocalObjectReference   `json:"imagePullSecrets,omitempty"`
+	UpdateStrategy           appsv1.StatefulSetUpdateStrategy `json:"updateStrategy,omitempty"`
+	Service                  *ServiceConfig                   `json:"service,omitempty"`
+	// +kubebuilder:default:=redis-sentinel
+	RedisSentinelName string `json:"redisSentinelName"`
 	// +kubebuilder:default:=redisSentinelCluster
 	MasterGroupName string `json:"masterGroupName,omitempty"`
-	// +kubebuilder:default:="6379"
-	RedisPort string `json:"redisPort,omitempty"`
+	// +kubebuilder:default:="26379"
+	SentinelPort string `json:"redisPort,omitempty"`
 	// +kubebuilder:default:="2"
 	Quorum string `json:"quorum,omitempty"`
 	// +kubebuilder:default:="1"

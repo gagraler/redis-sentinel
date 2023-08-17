@@ -17,6 +17,7 @@ limitations under the License.
 package utils
 
 import (
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -33,6 +34,29 @@ func createKubernetesClient() *kubernetes.Clientset {
 		panic(err.Error())
 	}
 	return clientSet
+}
+
+// createK8sDynamicClient create Dynamic client for kubernetes
+func createK8sDynamicClient() dynamic.Interface {
+	config, err := createK8sConfig()
+	if err != nil {
+		panic(err.Error())
+	}
+	dynamicClientSet, err := dynamic.NewForConfig(config)
+	if err != nil {
+		panic(err.Error())
+	}
+	return dynamicClientSet
+}
+
+// generateK8sConfig will load the kube config file
+func createK8sConfig() (*rest.Config, error) {
+	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
+	// if you want to change the loading rules (which files in which order), you can do so here
+	configOverrides := &clientcmd.ConfigOverrides{}
+	// if you want to change override values or bind them to flags, there are methods to help you
+	kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, configOverrides)
+	return kubeConfig.ClientConfig()
 }
 
 // loadKubeConfig 加载 kubeConfig 文件

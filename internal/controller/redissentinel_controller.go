@@ -78,7 +78,23 @@ func (r *RedisSentinelReconciles) Reconcile(ctx context.Context, req ctrl.Reques
 		}, err
 	}
 
-	return ctrl.Result{}, nil
+	// Create Redis Sentinel
+	err := utils.CreateRedisSentinel(instance)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	// Create the Service for Redis Sentinel
+	err = utils.CreateRedisSentinelService(instance)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	reqLogger.Info("Will reconcile redis operator in again 10 seconds")
+
+	return ctrl.Result{
+		RequeueAfter: time.Second * 10,
+	}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.

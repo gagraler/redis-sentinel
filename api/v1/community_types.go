@@ -21,8 +21,9 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// KubernetesConfig will be the JSON struct for Basic Redis Config
-type KubernetesConfig struct {
+// RedisConfig will be the JSON struct for Basic Redis Config
+type RedisConfig struct {
+	AdditionalRedisConfig  *string                          `json:"additionalRedisConfig,omitempty"`
 	Image                  string                           `json:"image"`
 	ImagePullPolicy        corev1.PullPolicy                `json:"imagePullPolicy,omitempty"`
 	Resources              *corev1.ResourceRequirements     `json:"resources,omitempty"`
@@ -30,6 +31,10 @@ type KubernetesConfig struct {
 	ImagePullSecrets       *[]corev1.LocalObjectReference   `json:"imagePullSecrets,omitempty"`
 	UpdateStrategy         appsv1.StatefulSetUpdateStrategy `json:"updateStrategy,omitempty"`
 	Service                *ServiceConfig                   `json:"service,omitempty"`
+	// +kubebuilder:default:=redis
+	RedisName string `json:"redisName"`
+	// +kubebuilder:default:="6379"
+	RedisPort string `json:"redisPort,omitempty"`
 }
 
 // ServiceConfig define the type of service to be created and its annotations
@@ -37,11 +42,6 @@ type ServiceConfig struct {
 	// +kubebuilder:validation:Enum=LoadBalancer;NodePort;ClusterIP
 	ServiceType        string            `json:"serviceType,omitempty"`
 	ServiceAnnotations map[string]string `json:"annotations,omitempty"`
-}
-
-// RedisConfig defines the external configuration of Redis
-type RedisConfig struct {
-	AdditionalRedisConfig *string `json:"additionalRedisConfig,omitempty"`
 }
 
 // ExistingPasswordSecret is the struct to access the existing secret
@@ -88,7 +88,11 @@ type TLSConfig struct {
 	Secret corev1.SecretVolumeSource `json:"secret"`
 }
 
-// Probe is a interface for ReadinessProbe and LivenessProbe
+type ACLConfig struct {
+	Secret *corev1.SecretVolumeSource `json:"secret,omitempty"`
+}
+
+// Probe is a interface for ReadinessProbe and LivelinessProbe
 type Probe struct {
 	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:default=1
